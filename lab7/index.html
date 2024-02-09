@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wersja Śledzik - Pogoda</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      .weather-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+
+      .weather-card {
+        width: 200px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        margin: 10px;
+        padding: 10px;
+        text-align: center;
+      }
+
+      .weather-icon {
+        width: 50px;
+        height: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wersja Śledzik - Pogoda</h1>
+
+    <div>
+      <label for="cityInput">Dodaj miejscowość:</label>
+      <input type="text" id="cityInput" placeholder="Nazwa miejscowości" />
+      <button onclick="addCity()">Dodaj</button>
+    </div>
+
+    <div class="weather-container" id="weatherContainer"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const displayWeather = async (cities) => {
+          const weatherContainer = document.getElementById("weatherContainer");
+          weatherContainer.innerHTML = "";
+
+          for (const city of cities) {
+            const weatherData = await getWeather(city);
+
+            if (weatherData) {
+              const weatherCard = document.createElement("div");
+              weatherCard.className = "weather-card";
+              weatherCard.innerHTML = `
+                            <h3>${weatherData.city}</h3>
+                            <p>Temp: ${weatherData.temperature}°C</p>
+                            <p>Wilgotność: ${weatherData.humidity}%</p>
+                            <p>Pogoda: ${weatherData.weather}</p>
+                            <img class="weather-icon" src="http://openweathermap.org/img/w/${weatherData.icon}.png" alt="Weather Icon">
+                            <button onclick="removeCity('${weatherData.city}')">Usuń</button>
+                        `;
+
+              weatherContainer.appendChild(weatherCard);
+            }
+          }
+        };
+
+        const getWeather = async (city) => {
+          const apiKey = "d04c61f7d7b6346c008819ab19b32b3c";
+          const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+
+          try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            console.log("Odpowiedź z API OpenWeatherMap:", data);
+
+            if (data.cod && data.cod !== "404") {
+              return {
+                city: data.name,
+                temperature: data.main.temp,
+                humidity: data.main.humidity,
+                weather: data.weather[0].main,
+                icon: data.weather[0].icon,
+              };
+            } else {
+              console.error(
+                "Błąd pobierania danych pogodowych: Odpowiedź z błędem",
+                data.message || data.cod
+              );
+              return null;
+            }
+          } catch (error) {
+            console.error("Błąd pobierania danych pogodowych:", error);
+            return null;
+          }
+        };
+
+        window.addCity = async () => {
+          const cityInput = document.getElementById("cityInput");
+          const cityName = cityInput.value.trim();
+
+          if (cityName === "") {
+            alert("Podaj nazwę miejscowości.");
+            return;
+          }
+
+          const existingCities =
+            JSON.parse(localStorage.getItem("cities")) || [];
+
+          if (existingCities.length >= 10) {
+            alert("Możesz dodać maksymalnie 10 miejscowości.");
+            return;
+          }
+
+          if (!existingCities.includes(cityName)) {
+            const weatherData = await getWeather(cityName);
+
+            if (weatherData) {
+              existingCities.push(cityName);
+              localStorage.setItem("cities", JSON.stringify(existingCities));
+              displayWeather(existingCities);
+            } else {
+              alert(
+                "Nie udało się pobrać danych pogodowych dla podanej miejscowości."
+              );
+            }
+          } else {
+            alert("To miasto już istnieje na liście.");
+          }
+
+          cityInput.value = "";
+        };
+
+        const removeCity = (city) => {
+          const existingCities =
+            JSON.parse(localStorage.getItem("cities")) || [];
+          const updatedCities = existingCities.filter((item) => item !== city);
+          localStorage.setItem("cities", JSON.stringify(updatedCities));
+          displayWeather(updatedCities);
+        };
+
+        const savedCities = JSON.parse(localStorage.getItem("cities")) || [];
+        displayWeather(savedCities);
+      });
+    </script>
+  </body>
+</html>
