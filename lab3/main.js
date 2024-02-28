@@ -1,11 +1,11 @@
 const boomSound = document.querySelector("#boom");
 const clapSound = document.querySelector("#clap");
-const hSound = document.querySelector("#hihat");
+const hihatSound = document.querySelector("#hihat");
 const kickSound = document.querySelector("#kick");
-const ohSound = document.querySelector("#openhat");
+const openhatSound = document.querySelector("#openhat");
 const rideSound = document.querySelector("#ride");
 const snareSound = document.querySelector("#snare");
-const tSound = document.querySelector("#tink");
+const tinkSound = document.querySelector("#tink");
 const tomSound = document.querySelector("#tom");
 const soundMap = {
   q: clapSound,
